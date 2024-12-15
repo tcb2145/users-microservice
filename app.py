@@ -20,7 +20,7 @@ db_config = {
     'database': 'w4153'
 }
 
-app = FastAPI()
+app = FastAPI(title='users')
 add_pagination(app)
 app.add_middleware(
     CORSMiddleware,
