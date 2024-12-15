@@ -44,13 +44,20 @@ class UserResponse(BaseModel):
 @app.middleware("http")
 async def sql_logging(request: Request, call_next):
     start_time = time.perf_counter()
+
+    headers = dict(request.scope['headers'])
+    correlation_id = str(uuid.uuid4()).encode('utf-8') if b'x-correlation-id' not in headers else headers[b'x-correlation-id']
+    headers[b'x-correlation-id'] = correlation_id
+    request.scope['headers'] = [(k, v) for k, v in headers.items()]
+
     response = await call_next(request)
+
     process_time = time.perf_counter() - start_time
     
     with mysql.connector.connect(**db_config) as conn:
         with conn.cursor(dictionary=True) as cursor:
-            query = "INSERT INTO logs (microservice, request, response, elapsed) VALUES (%s, %s, %s, %s)"
-            values = ('users', str(request.url.path), str(response.status_code), int(process_time))
+            query = "INSERT INTO logs (microservice, request, response, elapsed, correlation_id) VALUES (%s, %s, %s, %s, %s)"
+            values = ('gpt', str(request.url.path), str(response.status_code), int(process_time), correlation_id)
             cursor.execute(query, values)
             conn.commit()
         
