@@ -11,11 +11,12 @@ import uuid
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 from urllib.parse import quote, urlencode
+import os
 
 db_config = {
     'user': 'root',
     'password': 'dbuserdbuser',
-    'host': '34.46.34.153',
+    'host': os.environ.get('DB_HOST', '34.46.34.153'),
     'database': 'w4153'
 }
 
