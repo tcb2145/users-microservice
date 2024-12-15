@@ -1,0 +1,10 @@
+fastapi[standard]==0.115.6
+discord==2.3.2
+openai==1.57.1
+fastapi_pagination==0.12.32
+mysql_connector_python==9.1.0
+requests==2.25.1
+pydantic==2.10.3
+typing==3.7.4.3
+uuid==1.30
+uvicorn==0.32.1
