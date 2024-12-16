@@ -8,3 +8,5 @@ pydantic==2.10.3
 typing==3.7.4.3
 uuid==1.30
 uvicorn==0.32.1
+google-cloud-logging
+google-cloud-monitoring

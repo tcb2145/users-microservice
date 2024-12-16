@@ -12,12 +12,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import requests
 from urllib.parse import quote, urlencode
 import os
+from common.logger import Logger, CORRELATION_ID_HEADER   # Import the Logger
 
 db_config = {
-    'user': 'root',
-    'password': 'dbuserdbuser',
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', 'dbuserdbuser'),
     'host': os.environ.get('DB_HOST', '34.46.34.153'),
-    'database': 'w4153'
+    'database': os.environ.get('DB_NAME', 'w4153')
 }
 
 app = FastAPI(title='users')
@@ -29,6 +30,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize the Logger
+logger = Logger(app, service_name="users-microservice")
 
 class BasicResponse(BaseModel):
     message: str
@@ -42,29 +46,28 @@ class UserResponse(BaseModel):
 
 # middleware to log all requests
 @app.middleware("http")
-async def sql_logging(request: Request, call_next):
+async def log_request(request: Request, call_next):
+    
+    def send_logs(**log_data):
+        logger.log_request(**log_data)
+        
     start_time = time.perf_counter()
 
     headers = dict(request.scope['headers'])
 
-    if b'x-correlation-id' not in headers:
+    if CORRELATION_ID_HEADER not in headers:
         correlation_id = str(uuid.uuid4())
-        headers[b'x-correlation-id'] = correlation_id.encode('latin-1')
+        headers[CORRELATION_ID_HEADER] = correlation_id.encode('latin-1')
         request.scope['headers'] = [(k, v) for k, v in headers.items()]
     else:
-        correlation_id = request.headers['x-correlation-id']
+        correlation_id = request.headers[CORRELATION_ID_HEADER]
 
     response = await call_next(request)
 
-    process_time = time.perf_counter() - start_time
+    process_time = int((time.perf_counter() - start_time) * 1000)  # ms
     
-    with mysql.connector.connect(**db_config) as conn:
-        with conn.cursor(dictionary=True) as cursor:
-            query = "INSERT INTO logs (microservice, request, response, elapsed, correlation_id) VALUES (%s, %s, %s, %s, %s)"
-            values = ('users', str(request.url.path), str(response.status_code), int(process_time), correlation_id)
-            cursor.execute(query, values)
-            conn.commit()
-        
+    await logger.log_request(str(request.url.path), str(response.status_code), process_time, correlation_id)
+    
     return response
 
 # basic hello world for the microservice
