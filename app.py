@@ -47,9 +47,6 @@ class UserResponse(BaseModel):
 # middleware to log all requests
 @app.middleware("http")
 async def log_request(request: Request, call_next):
-    
-    def send_logs(**log_data):
-        logger.log_request(**log_data)
         
     start_time = time.perf_counter()
 
