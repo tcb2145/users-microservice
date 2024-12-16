@@ -14,7 +14,7 @@ env:
   DB_HOST: '34.46.34.153'
   DB_USER: 'root'
   DB_PASSWORD: 'dbuserdbuser'
-  DB_NAME: 'LoggingDB'
+  DB_NAME: 'w4153'
   PORT: '8000'
   SERVICE_ACCOUNT_PREFIX: 'github-action-cloud-user-ms'
 
